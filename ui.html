@@ -1,6 +1,39 @@
+<!-- Standard link tag-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css">
+<style>
+  body {
+    margin: 16;
+  }
+  p, ul {
+    font-size: 12;
+  }
+  .quote {
+    margin-bottom: 16;
+    background-color: #F3F3F3;
+    padding: 8 0 8 0;
+  }
+  .flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 16 0 16 0;
+  }
+  .row {
+    margin-right: 16;
+  }
+  .flex-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 16 0 16 0;
+  }
+</style>
+
+
 <h2>Rectangle Creator</h2>
 <p>Count: <input id="count" value="5"></p>
 <button id="create">Create</button>
+<button id="import">Import</button>
 <button id="cancel">Cancel</button>
 <script>
 
@@ -10,8 +43,22 @@ document.getElementById('create').onclick = () => {
   parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*')
 }
 
+document.getElementById('import').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'import-styles'} }, '*')
+}
+
 document.getElementById('cancel').onclick = () => {
   parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
 }
+
+function refresh(){
+  parent.postMessage({ pluginMessage: { type: 'refresh' } }, '*')
+  
+}
+
+function quit() {
+  parent.postMessage({ pluginMessage: { quit: true } }, '*');
+}
+
 
 </script>
