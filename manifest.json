@@ -1,0 +1,10 @@
+{
+  "name": "Style Transfer",
+  "id": "1198147122277741845",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": [
+    "figma"
+  ],
+  "ui": "ui.html"
+}
