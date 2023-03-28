@@ -7,7 +7,7 @@
 
 // This shows the HTML page in "ui.html".
 figma.showUI(__html__);
-figma.ui.resize(300, 500)
+figma.ui.resize(300, 400)
 
 let allPaintStyles: PaintStyle[], allTextStyles: TextStyle[], allGridStyles: GridStyle[], allEffectStyles: EffectStyle[];
 const nodes: SceneNode[] = [];
@@ -17,14 +17,52 @@ const nodes: SceneNode[] = [];
 figma.ui.onmessage = msg => {
   // One way of distinguishing between different types of messages sent from
   // your HTML page is to use an object with a "type" property like this.
-  if (msg.type === 'create-rectangles') {
+  if (msg.type === 'export-styles') {
     GetAllStyles();
     CreateTransfer();
   }
 
   if (msg.type === 'import-styles') {
-    ImportStyles();
+    GetAllStyles();
+    ImportStyles(true, true, true);
   }
+
+  if (msg.type === 'export-color') {
+    allPaintStyles = figma.getLocalPaintStyles();
+    allPaintStyles.forEach((element, i) => {
+      createPaintStyleLayer(element, 1050, i*50)
+    });
+  }
+
+  if (msg.type === 'import-color') {
+    allPaintStyles = figma.getLocalPaintStyles();
+    ImportStyles(false, false, true);
+  }
+
+  if (msg.type === 'export-text') {
+    allTextStyles = figma.getLocalTextStyles();
+    allTextStyles.forEach((element, i) => {
+      createTextStyleLayer(element, 50, i*50)
+    });
+  }
+
+  if (msg.type === 'import-text') {
+    allTextStyles = figma.getLocalTextStyles();
+    ImportStyles(true, false, false);
+  }
+
+  if (msg.type === 'export-effect') {
+    allEffectStyles = figma.getLocalEffectStyles();
+    allEffectStyles.forEach((element, i) => {
+      createEffectStyleLayer(element, 350, i*50)
+    });
+  }
+
+  if (msg.type === 'import-effect') {
+    allEffectStyles = figma.getLocalEffectStyles();
+    ImportStyles(false, true, false);
+  }
+
 
   if (msg.quit) figma.closePlugin();
 
@@ -40,7 +78,7 @@ function GetAllStyles(){
   allEffectStyles = figma.getLocalEffectStyles();
 
   console.log(allPaintStyles, allTextStyles, allGridStyles, allEffectStyles)
-
+  
 }
 
 function CreateTransfer(){
@@ -48,11 +86,49 @@ function CreateTransfer(){
   allTextStyles.forEach((element, i) => {
     createTextStyleLayer(element, 50, i*50)
   });
+  allEffectStyles.forEach((element, i) => {
+    createEffectStyleLayer(element, 350, i*50)
+  });
+  allPaintStyles.forEach((element, i) => {
+    createPaintStyleLayer(element, 1050, i*50)
+  });
 
   // allPaintStyles.forEach(element => {
   //   paintInfo.characters += JSON.stringify(element)
   // });
 }
+
+function createEffectStyleLayer(element:EffectStyle, x:number, y:number){
+  const rect = figma.createFrame()
+  rect.x = x
+  rect.y = y
+
+  rect.resize(200, 50);
+  rect.effectStyleId = element.id;
+  rect.name = element.name;
+
+  figma.currentPage.appendChild(rect);
+  nodes.push(rect);
+  figma.currentPage.selection = nodes;
+  figma.viewport.scrollAndZoomIntoView(nodes);
+}
+
+function createPaintStyleLayer(element:PaintStyle, x:number, y:number){
+  const rect = figma.createRectangle()
+  rect.x = x
+  rect.y = y
+
+  rect.resize(200, 50);
+  rect.fills = element.paints;
+  rect.fillStyleId = element.id;
+  rect.name = element.name;
+
+  figma.currentPage.appendChild(rect);
+  nodes.push(rect);
+  figma.currentPage.selection = nodes;
+  figma.viewport.scrollAndZoomIntoView(nodes);
+}
+
 
 function createTextStyleLayer(element:TextStyle, x:number, y:number){
   (async () => {
@@ -63,10 +139,10 @@ function createTextStyleLayer(element:TextStyle, x:number, y:number){
   
     // Load the font in the text node before setting the characters
     await figma.loadFontAsync(element.fontName)
+    text.fontName = element.fontName;
     text.characters = element.name;
     text.fontSize = element.fontSize;
     text.textDecoration = element.textDecoration;
-    text.fontName = element.fontName;
     text.letterSpacing = element.letterSpacing;
     text.lineHeight = element.lineHeight;
     text.paragraphIndent = element.paragraphIndent;
@@ -81,23 +157,65 @@ function createTextStyleLayer(element:TextStyle, x:number, y:number){
   })()
 }
 
-function ImportStyles(){
+function ImportStyles(text:boolean, effect:boolean, color:boolean){
   let nodes = figma.currentPage.selection;
   nodes.forEach(element => {
-    if (element.type == 'TEXT'){
-      (async () => {
-        await figma.loadFontAsync(element.fontName as FontName)
-        const text = figma.createTextStyle();
-        text.name = element.characters;
-        text.fontSize = element.fontSize as number;
-        text.textDecoration = element.textDecoration as TextDecoration;
-        text.fontName = element.fontName as FontName;
-        text.letterSpacing = element.letterSpacing as LetterSpacing;
-        text.lineHeight = element.lineHeight as LineHeight;
-        text.paragraphIndent = element.paragraphIndent as number;
-        text.paragraphSpacing = element.paragraphSpacing as number;
-        text.textCase = element.textCase as TextCase;
-      })()
+    if (element.type == 'TEXT' && text){
+      let text = allTextStyles.find(style => style.name === element.characters)
+      if (!text) text = figma.createTextStyle();
+      ImportTextStyle(element, text)
     }
+    if (element.type == 'FRAME' && effect){
+      let effect = allEffectStyles.find(style => style.name === element.name)
+      if (!effect) effect = figma.createEffectStyle();
+      ImportEffectStyle(element, effect)
+    }
+    if (element.type == 'RECTANGLE' && color){
+      let paints = allPaintStyles.find(style => style.name === element.name)
+      if (!paints) paints = figma.createPaintStyle();
+      ImportPaintStyle(element, paints)
+    }
+  });
+}
+
+function ImportTextStyle(element:TextNode, text:TextStyle){
+  (async () => {
+    await figma.loadFontAsync(element.fontName as FontName)
+    // const text = figma.createTextStyle();
+    text.fontName = element.fontName as FontName;
+    text.name = element.characters;
+    text.fontSize = element.fontSize as number;
+    text.textDecoration = element.textDecoration as TextDecoration;
+    text.letterSpacing = element.letterSpacing as LetterSpacing;
+    text.lineHeight = element.lineHeight as LineHeight;
+    text.paragraphIndent = element.paragraphIndent as number;
+    text.paragraphSpacing = element.paragraphSpacing as number;
+    text.textCase = element.textCase as TextCase;
+  })()
+}
+
+function ImportEffectStyle(element:FrameNode, effect:EffectStyle){
+  const newEffect = element.effects;
+  // const effect = figma.createEffectStyle();
+  effect.name = element.name
+  effect.effects = newEffect;
+}
+
+function ImportPaintStyle(element:RectangleNode, paints:PaintStyle){
+  const newPaints = element.fills as ReadonlyArray<Paint>;
+  // const paints = figma.createPaintStyle();
+  paints.name = element.name;
+  paints.paints = newPaints;
+}
+
+function ReplaceTextStyle(element:TextNode){
+
+}
+
+
+function CreateStyles(){
+  let nodes = figma.currentPage.selection;
+  nodes.forEach(element => {
+    
   });
 }

@@ -27,24 +27,90 @@
     align-items: center;
     margin: 16 0 16 0;
   }
+  .fill {
+    width: 100%; 
+    margin-bottom: 8px;
+  }
+  .block {
+    margin: 0 8 0 8;
+  }
+  .onboarding-tip{
+    background-color: #F3F3F3;
+    padding: 8;
+    border-radius: 4px;
+  }
+  .footer {
+    position: fixed;
+    bottom: 0px;
+    width: 268px;
+  }
 </style>
+<div class="warpper">
+  <div class="onboarding-tip">
+    <div class="icon icon--play"></div>
+    <div class="onboarding-tip__msg">Export local styles, select and import. Auto update the existing styles.</div>
+  </div>
+  
+  <div class="flex-row">
+    <div class="section-title">Color styles</div>
+    <button class='button button--tertiary block' id="import-color">Import</button>
+    <button class='button button--tertiary block' id="export-color">Export</button>
+  </div>
+  <div class="flex-row">
+    <div class="section-title">Text styles</div>
+    <button class='button button--tertiary block' id="import-text">Import</button>
+    <button class='button button--tertiary block' id="export-text">Export</button>
+  </div>
+  <div class="flex-row">
+    <div class="section-title">Effect styles</div>
+    <button class='button button--tertiary block' id="import-effect">Import</button>
+    <button class='button button--tertiary block' id="export-effect">Export</button>
+  </div>
+  <div class="flex-col footer">
+    <button class='button button--secondary fill' id="import">Import all from Selection</button>
+    <button class='button button--primary fill' id="export">Export all local styles</button>
+  </div>
+</div>
+
+<!-- <div class="flex-row">
+  <div class="section-title">Grid styles</div>
+  <button class='button button--tertiary block' id="import-grid">Import</button>
+  <button class='button button--tertiary block' id="export-grid">Export</button>
+</div> -->
 
 
-<h2>Rectangle Creator</h2>
-<p>Count: <input id="count" value="5"></p>
-<button id="create">Create</button>
-<button id="import">Import</button>
-<button id="cancel">Cancel</button>
 <script>
 
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*')
+document.getElementById('export').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'export-styles'} }, '*')
 }
 
 document.getElementById('import').onclick = () => {
   parent.postMessage({ pluginMessage: { type: 'import-styles'} }, '*')
+}
+
+document.getElementById('export-color').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'export-color'} }, '*')
+}
+
+document.getElementById('import-color').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'import-color'} }, '*')
+}
+
+document.getElementById('export-text').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'export-text'} }, '*')
+}
+
+document.getElementById('import-text').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'import-text'} }, '*')
+}
+
+document.getElementById('export-effect').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'export-effect'} }, '*')
+}
+
+document.getElementById('import-effect').onclick = () => {
+  parent.postMessage({ pluginMessage: { type: 'import-effect'} }, '*')
 }
 
 document.getElementById('cancel').onclick = () => {
